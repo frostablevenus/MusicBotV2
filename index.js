@@ -2,9 +2,9 @@
 /// -------------------------------index.js------------------------------- ///
 //////////////////////////////////////////////////////////////////////////////
 // This serves as the entry to the program.
-// It handles setting up the logins for our Redis and Discord clients
-// adding functionalities (toolkits) to them for commands to use, and
-// binding event handlers to these clients.
+// It handles setting up the logins for our Redis and Discord clients,
+// adding functionalities (toolkits) to them for commands to use,
+// and binding event handlers to these clients.
 
 const { Collection } = require('discord.js');
 const fs = require('node:fs');
@@ -16,7 +16,7 @@ const { bindRedisEvents } = require("./eventHandlersRedis.js");
 let redisClient = require("./logins.js").redisClient;
 let discordClient = require("./logins.js").discordClient;
 
-// Add helper functions for Redis and Discord clients
+// Add function toolkits to our Redis and Discord clients
 redisClient.Toolkit = require("./redisToolkit.js");
 redisClient.Toolkit.redisClient = redisClient;
 
@@ -24,6 +24,8 @@ discordClient.Toolkit = require("./discordToolkit.js");
 discordClient.Toolkit.discordClient = discordClient;
 
 discordClient.redisClient = redisClient;
+
+// serverQueues is our main runtime data structure.
 discordClient.serverQueues = new Collection();
 
 // Parse commands and conditions
@@ -64,13 +66,3 @@ function parseConditionFiles()
 		discordClient.conditions.set(conditionName, condition);
 	}
 }
-
-// For permission hexcodes, refer to https://discord.com/developers/docs/topics/permissions.
-const EMOTE_CONFIRM = '👌';
-const EMOTE_ALREADY_DONE = '♻️';
-const EMOTE_PREV = '⬅️';
-const EMOTE_NEXT = '➡️';
-const EMOTE_ERROR = '🛑';
-
-/// Settings
-const numSongsPerQueuePage = 10;

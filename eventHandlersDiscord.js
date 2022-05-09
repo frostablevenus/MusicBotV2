@@ -1,6 +1,6 @@
 // Contains event handlers for our Discord client
 
-const { MessageEmbed, Collection } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { VoiceConnectionStatus, entersState } = require('@discordjs/voice');
 const { prevQueuePage, nextQueuePage } = require('./commands/queue.js');
 

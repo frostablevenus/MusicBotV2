@@ -1,7 +1,4 @@
-const { MessageEmbed } = require('discord.js');
 const { Conditions } = require("../commandConditions.js");
-const { getVoiceConnection } = require('@discordjs/voice');
-
 
 module.exports = 
 {

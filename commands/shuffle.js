@@ -1,5 +1,4 @@
 const { Conditions } = require("../commandConditions.js");
-const { AudioPlayerStatus } = require('@discordjs/voice');
 
 module.exports = 
 {

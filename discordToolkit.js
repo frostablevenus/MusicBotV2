@@ -1,4 +1,4 @@
-// Functions that are added to a redis client to expand its functionalities.
+// Functions that are added to a Discord client to expand its functionalities.
 
 const { MessageEmbed } = require('discord.js');
 const { getVoiceConnection, joinVoiceChannel, AudioPlayerStatus, createAudioPlayer, createAudioResource, demuxProbe } = require('@discordjs/voice');

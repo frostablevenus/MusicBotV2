@@ -64,8 +64,8 @@ module.exports =
 			catch (error)
 			{
 				let embed = new MessageEmbed()
-					.setTitle("Invalid playlist link")
-					.setDescription(error);
+					.setTitle("Invalid/Private playlist link")
+					.setDescription("Code monkey message: " + error.message);
 				message.channel.send({ embeds: [embed] });
 				return songs;
 			}

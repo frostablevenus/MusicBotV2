@@ -1,5 +1,3 @@
-const { MessageEmbed } = require('discord.js');
-
 module.exports = 
 {
 	failureMessage: "No song has been queued. ~play to begin.",
