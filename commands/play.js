@@ -42,7 +42,7 @@ module.exports =
 			// END CRITICAL REGION: both serverQueue and audioPlayer should be valid now.
 
 			// Send "queued" messages if we aren't gonna play the added song right away (audioPlayer already has resource to play).
-			const bQueueIsIdle = !serverQueue.audioPlayer.state.resource;
+			const bQueueIsIdle = !serverQueue.audioPlayer.state.resource && !serverQueue.audioPlayer.hasResource;
 
 			if (songs.length === 1)
 			{

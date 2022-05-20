@@ -350,6 +350,7 @@ function requestAudioPlayer(voiceChannel)
 		}
 		
 		audioPlayer.currentRetryCount = 0;
+		audioPlayer.hasResource = false;
 
 		module.exports.tryPlayNextSong(serverId);
 	});
@@ -451,9 +452,9 @@ function playSongAtIndex(serverQueue, index)
 // Creates the audio resource from the song and play it on the audio player
 async function createResourceAndPlayOnAudioPlayer(audioPlayer, song, startTime = 0)
 {
-	// Sort of a hack to allow us to get whether there is a pending resource on the audio player before it gets played.
-	// Because there is a delay between the call to "play" and when the audio player's state changes.
-	audioPlayer.state.resource = true;
+	// Mark there is a pending resource on the audio player before it gets played to fix double skip/double play.
+	// This is because there is a delay between the call to "play" and when the audio player's state changes.
+	audioPlayer.hasResource = true;
 
 	// Audio-only is important, otherwise we'll get into issues where the stream doesn't demux (?) properly
 	// and our audioPlayer will throw a "resource already ended" error
@@ -467,7 +468,7 @@ async function createResourceAndPlayOnAudioPlayer(audioPlayer, song, startTime =
 
 	// Allows the audio player to start at some time into the song, to handle interruption for example.
 	// If start time is not specified, use demuxProbe for optimization.
-	let resource;
+	let resource = null;
 	// if (startTime > 0)
 	// {
 	// 	readableStream = fluentFfmpeg({source: readableStream}).toFormat('mp3').setStartTime(Math.ceil(startTime / 1000));
@@ -481,9 +482,10 @@ async function createResourceAndPlayOnAudioPlayer(audioPlayer, song, startTime =
 
 	// Using playdl in place of ytdl due to an "aborted" issue with miniget in the latter
 	// More info here: https://github.com/fent/node-ytdl-core/issues/902
-	const { stream, type } = await playdl.stream(song.url, 
+
+	let { stream, type } = await playdl.stream(song.url, 
 	{
-		discordPlayerCompatibility: true,
+		// discordPlayerCompatibility: true,
 		quality: 2,
 		seek: Math.ceil(startTime / 1000),
 	});
@@ -492,6 +494,7 @@ async function createResourceAndPlayOnAudioPlayer(audioPlayer, song, startTime =
 	resource.metadata = song;
 
 	audioPlayer.play(resource);
+	
 }
 
 // For debugging
