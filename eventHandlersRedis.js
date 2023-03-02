@@ -6,7 +6,7 @@ Bluebird.promisifyAll(Redis);
 
 const {serverPrefixesDBKeys, personalListsDBKeys} = require("./redisConfig.json");
 
-function bindRedisEvents(redisClient)
+async function bindRedisEvents(redisClient)
 {
 	const botIndex = require("./envSetup.js").botIndex;
 	const serverPrefixesDBKey = serverPrefixesDBKeys[botIndex];
@@ -17,8 +17,7 @@ function bindRedisEvents(redisClient)
 	redisClient.serverPrefixesDBKey = serverPrefixesDBKey;
 	redisClient.personalListsDBKey = personalListsDBKey;
 
-	// Bind events
-	redisClient.on("ready", async function()
+	async function addKeysIfNotExist()
 	{
 		// Init the server prefixes K/V pair if it doesn't exist
 		let serverPrefixesStr = await redisClient.get(serverPrefixesDBKey);
@@ -26,14 +25,28 @@ function bindRedisEvents(redisClient)
 		{
 			await redisClient.Toolkit.redisSetKey(serverPrefixesDBKey, []);
 		}
-	
+
 		// Init the personal playlist K/V pair if it doesn't exist
 		let personalListsStr = await redisClient.get(personalListsDBKey);
 		if (personalListsStr === null)
 		{
 			await redisClient.Toolkit.redisSetKey(personalListsDBKey, []);
 		}
-	});
+	}
+	
+	try 
+	{
+		await redisClient.ping()
+		await addKeysIfNotExist();
+	}
+	catch (error)
+	{
+		// Redis is not yet ready. Bind to ready event to add keys.
+		redisClient.on("ready", async function()
+		{
+			await addKeysIfNotExist();
+		});
+	}
 	
 	redisClient.on("error", function(error)
 	{

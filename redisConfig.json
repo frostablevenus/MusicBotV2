@@ -1,4 +1,4 @@
 {
-    "serverPrefixesDBKeys": ["serverPrefixes", "serverPrefixes1", "serverPrefixesTest"],
-	"personalListsDBKeys" : ["personalLists", "personalLists1", "personalListsTest"]
+    "serverPrefixesDBKeys": ["serverPrefixes", "serverPrefixes1", "serverPrefixes2", "serverPrefixesTest"],
+	"personalListsDBKeys" : ["personalLists", "personalLists1", "personalLists2", "personalListsTest"]
 }

@@ -11,45 +11,46 @@ module.exports =
 
 		const tryPlayLink = async (content) =>
 		{
-			// Youtube - Single vid
-			if (ytdl.validateURL(content))
+			if (!ytdl.validateURL(content))
 			{
-				let songInfo;
-				try
-				{
-					songInfo = await ytdl.getInfo(content);
-				}
-				catch (error)
-				{
-					let embed = new MessageEmbed()
-						.setTitle("Invalid video link")
-						.setDescription(error);
-					message.channel.send({ embeds: [embed] });
-					return false;
-				}
-				
-				const song =
-				{
-					title: songInfo.videoDetails.title,
-					url: songInfo.videoDetails.video_url,
-				};
-				songs.push(song);
-
-				return true;
+				// Try linkifying it in case the vid ID was provided.
+				content = "https://www.youtube.com/watch?v=" + contentToPlay;
 			}
+
+			if (!ytdl.validateURL(content))
+			{
+				return false;
+			}
+
+			// Youtube - Single vid
+			let songInfo;
+			try
+			{
+				songInfo = await ytdl.getInfo(content);
+			}
+			catch (error)
+			{
+				console.log(error);
+				let embed = new MessageEmbed()
+					.setTitle("Invalid video link")
+					.setDescription(error.message);
+				message.channel.send({ embeds: [embed] });
+				return false;
+			}
+			
+			const song =
+			{
+				title: songInfo.videoDetails.title,
+				url: songInfo.videoDetails.video_url,
+			};
+			songs.push(song);
+
+			return true;
 		};
 
 		if (await tryPlayLink(contentToPlay))
 		{
 			return songs;
-		}
-		else
-		{
-			const linkifiedContent = "https://www.youtube.com/watch?v=" + contentToPlay;
-			if (await tryPlayLink(linkifiedContent))
-			{
-				return songs;
-			}
 		}
 		
 		// Youtube - Playlist

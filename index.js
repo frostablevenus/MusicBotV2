@@ -13,27 +13,48 @@ const { bindDiscordEvents } = require("./eventHandlersDiscord.js");
 const { bindRedisEvents } = require("./eventHandlersRedis.js");
 
 // Logins
-let redisClient = require("./logins.js").redisClient;
-let discordClient = require("./logins.js").discordClient;
+const { loginRedis, loginDiscord } = require("./logins.js");
 
-// Add function toolkits to our Redis and Discord clients
-redisClient.Toolkit = require("./redisToolkit.js");
-redisClient.Toolkit.redisClient = redisClient;
+var redisClient = null;
+var discordClient = null;
 
-discordClient.Toolkit = require("./discordToolkit.js");
-discordClient.Toolkit.discordClient = discordClient;
+async function startClients() 
+{
+	redisClient = await loginRedis();
+	discordClient = await loginDiscord();
+}
 
-discordClient.redisClient = redisClient;
+async function extendClientFunctions()
+{
+	// Add function toolkits to our Redis and Discord clients
+	redisClient.Toolkit = require("./redisToolkit.js");
+	redisClient.Toolkit.redisClient = redisClient;
 
-// serverQueues is our main runtime data structure.
-discordClient.serverQueues = new Collection();
+	discordClient.Toolkit = require("./discordToolkit.js");
+	discordClient.Toolkit.discordClient = discordClient;
 
-// Parse commands and conditions
-parseCommandFiles();
-parseConditionFiles();
+	discordClient.redisClient = redisClient;
 
-bindRedisEvents(redisClient);
-bindDiscordEvents(discordClient);
+	// serverQueues is our main runtime data structure.
+	discordClient.serverQueues = new Collection();
+
+	// Parse commands and conditions
+	parseCommandFiles();
+	parseConditionFiles();
+
+	await bindRedisEvents(redisClient);
+	bindDiscordEvents(discordClient);
+}
+
+startClients().then(
+	async () => {
+		await extendClientFunctions();
+	},
+	error =>
+	{
+		console.error("Encountered client error starting up: " + error);
+	}
+);
 
 //////////////////////////////////////////////////////////////////////////////
 /// -------------------------------Helpers-------------------------------- ///
