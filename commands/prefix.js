@@ -69,7 +69,7 @@ module.exports =
 		message.channel.send({ embeds: [embed] });
 
 		// Change our nickname to the new prefix
-		if (!message.guild.me.permissions.has("CHANGE_NICKNAME"))
+		if (!message.guild.members.me.permissions.has("CHANGE_NICKNAME"))
 		{
 			let embed = new MessageEmbed()
 				.setTitle(`Failed to update my nickname with the new prefix. Please give me this permission if you want this to happen automatically.`);
@@ -77,7 +77,7 @@ module.exports =
 		}
 		else
 		{
-			message.guild.me.setNickname(serverNicknames[botIndex] + " [" + newPrefix + "]");
+			message.guild.members.me.setNickname(serverNicknames[botIndex] + " [" + newPrefix + "]");
 		}
 	},
 };

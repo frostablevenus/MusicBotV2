@@ -1,7 +1,7 @@
 // Functions that are added to a Discord client to expand its functionalities.
 
 const { MessageEmbed } = require('discord.js');
-const { getVoiceConnection, joinVoiceChannel, AudioPlayerStatus, createAudioPlayer, createAudioResource, demuxProbe } = require('@discordjs/voice');
+const { getVoiceConnection, joinVoiceChannel, AudioPlayerStatus, createAudioPlayer, createAudioResource, demuxProbe, NoSubscriberBehavior, AudioPlayer } = require('@discordjs/voice');
 const { bindVoiceConnectionEvents } = require("./eventHandlersDiscord.js"); 
 
 const ytdl = require('ytdl-core');
@@ -51,7 +51,7 @@ module.exports =
 			return;
 		}
 
-		if (!message.guild.me.permissions.has(command.botPermissionsRequired, true))
+		if (!message.guild.members.me.permissions.has(command.botPermissionsRequired, true))
 		{
 			let embed = new MessageEmbed()
 				.setTitle(command.botMissingPermsMessage === null ? 
@@ -164,6 +164,7 @@ module.exports =
 
 			if (!connection)
 			{
+				console.error("DiscordAPI Error: Couldn't connect to voice channel.");
 				throw("DiscordAPI Error: Couldn't connect to voice channel.");
 			}
 		}
@@ -177,6 +178,7 @@ module.exports =
 			
 			if (!audioPlayer)
 			{
+				console.error("DiscordAPI Error: Couldn't create an audio player.");
 				throw("DiscordAPI Error: Couldn't create an audio player.");
 			}
 		}
@@ -334,7 +336,15 @@ function requestAudioPlayer(voiceChannel)
 {
 	const serverId = voiceChannel.guild.id;
 
-	audioPlayer = createAudioPlayer();
+	audioPlayer = createAudioPlayer(
+		{
+			behaviors:
+			{
+				noSubscriber: NoSubscriberBehavior.Play,
+			},
+		}
+	);
+
 	module.exports.setServerAudioPlayer(serverId, audioPlayer);
 	audioPlayer.serverId = serverId;
 
@@ -455,46 +465,52 @@ async function createResourceAndPlayOnAudioPlayer(audioPlayer, song, startTime =
 	// Mark there is a pending resource on the audio player before it gets played to fix double skip/double play.
 	// This is because there is a delay between the call to "play" and when the audio player's state changes.
 	audioPlayer.hasResource = true;
-
-	// Audio-only is important, otherwise we'll get into issues where the stream doesn't demux (?) properly
-	// and our audioPlayer will throw a "resource already ended" error
-	// let readableStream = await ytdl(song.url, 
-	// 	{ 
-	// 		filter: "audioonly", 
-	// 		quality: "highestaudio",
-	// 		highWatermark: "",
-	// 		begin: `${startTime}ms`,
-	// 	});
-
-	// Allows the audio player to start at some time into the song, to handle interruption for example.
-	// If start time is not specified, use demuxProbe for optimization.
 	let resource = null;
-	// if (startTime > 0)
-	// {
-	// 	readableStream = fluentFfmpeg({source: readableStream}).toFormat('mp3').setStartTime(Math.ceil(startTime / 1000));
-	// 	resource = createAudioResource(readableStream);
-	// }
-	// else
-	// {
-	// 	const { stream, type } = await demuxProbe(readableStream); // does not work with fluentFfmpeg's output
-	// 	resource = createAudioResource(stream, { inputType: type });
-	// }
 
-	// Using playdl in place of ytdl due to an "aborted" issue with miniget in the latter
-	// More info here: https://github.com/fent/node-ytdl-core/issues/902
-
-	let { stream, type } = await playdl.stream(song.url, 
+	const bUsingPlaydl = true;
+	if (!bUsingPlaydl)
 	{
-		// discordPlayerCompatibility: true,
-		quality: 2,
-		seek: Math.ceil(startTime / 1000),
-	});
+		// Audio-only is important, otherwise we'll get into issues where the stream doesn't demux (?) properly
+		// and our audioPlayer will throw a "resource already ended" error
+		let readableStream = await ytdl(song.url, 
+			{ 
+				filter: "audioonly", 
+				quality: "highestaudio",
+				highWatermark: "",
+				begin: `${startTime}ms`,
+			});
 
-	resource = createAudioResource(stream, { inputType: type });
+		// Allows the audio player to start at some time into the song, to handle interruption for example.
+		// If start time is not specified, use demuxProbe for optimization.
+		if (startTime > 0)
+		{
+			readableStream = fluentFfmpeg({source: readableStream}).toFormat('mp3').setStartTime(Math.ceil(startTime / 1000));
+			resource = createAudioResource(readableStream);
+		}
+		else
+		{
+			const { stream, type } = await demuxProbe(readableStream); // does not work with fluentFfmpeg's output
+			resource = createAudioResource(stream, { inputType: type });
+		}
+	}
+	else
+	{
+		// Using playdl in place of ytdl due to an "aborted" issue with miniget in the latter
+		// More info here: https://github.com/fent/node-ytdl-core/issues/902
+
+		let { stream, type } = await playdl.stream(song.url, 
+			{
+				// discordPlayerCompatibility: true,
+				quality: 2,
+				seek: Math.ceil(startTime / 1000),
+			});
+		
+		resource = createAudioResource(stream, { inputType: type });
+	}
+
 	resource.metadata = song;
 
 	audioPlayer.play(resource);
-	
 }
 
 // For debugging

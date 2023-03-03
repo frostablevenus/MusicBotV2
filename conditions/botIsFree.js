@@ -4,6 +4,6 @@ module.exports =
 
 	check(message) 
 	{
-		return !message.guild.me.voice.channel || message.guild.me.voice.channel == message.member.voice.channel;
+		return !message.guild.members.me.voice.channel || message.guild.members.me.voice.channel == message.member.voice.channel;
 	},
 };

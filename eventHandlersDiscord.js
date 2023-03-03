@@ -39,7 +39,7 @@ module.exports =
 			}
 	
 			// Does this message start with a mention for this bot?
-			const thisBotID = message.guild.me.id;
+			const thisBotID = message.guild.members.me.id;
 			const bStartsWithMention = message.content.startsWith(`<@${thisBotID}>`) || message.content.startsWith(`<@!${thisBotID}>`);
 	
 			// Does this message start with the set prefix?
@@ -146,6 +146,31 @@ module.exports =
 				console.log("Couldn't reconnect to voice activity in ${serverId}. Removing states...");
 
 				discordClient.Toolkit.cleanUpServerConnection(serverId);
+			}
+		});
+
+		// Temp fix for https://github.com/discordjs/discord.js/issues/9185
+		connection.on("stateChange", async (oldState, newState) => 
+		{
+			const oldNetworking = oldState.networking;
+			const newNetworking = newState.networking;
+
+			const networkStateChangeHandler = (oldNetworkState, newNetworkState) => 
+			{
+				const newUdp = newNetworkState.udp;
+				if (newUdp)
+				{
+					clearInterval(newUdp.keepAliveInterval);
+				}
+			};
+
+			if (oldNetworking)
+			{
+				oldNetworking.off('stateChange', networkStateChangeHandler);
+			}
+			if (newNetworking)
+			{
+				newNetworking.on('stateChange', networkStateChangeHandler);
 			}
 		});
 	},
