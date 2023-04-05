@@ -5,6 +5,7 @@
 // It handles setting up the logins for our Redis and Discord clients,
 // adding functionalities (toolkits) to them for commands to use,
 // and binding event handlers to these clients.
+require('console-stamp')(console);
 
 const { Collection } = require('discord.js');
 const fs = require('node:fs');
@@ -53,6 +54,7 @@ startClients().then(
 	error =>
 	{
 		console.error("Encountered client error starting up: " + error);
+		process.exit(1);
 	}
 );
 
